@@ -1,5 +1,6 @@
 [
   {
+    "id": 1,
     "name": "Post Matric Scholarship",
     "category": "Post Matric",
     "description": "Sample scholarship record for students studying after matriculation.",
@@ -20,6 +21,7 @@
     "isDemo": true
   },
   {
+    "id": 2,
     "name": "Pre Matric Scholarship",
     "category": "Pre Matric",
     "description": "Sample scholarship record for eligible students studying before matriculation.",
