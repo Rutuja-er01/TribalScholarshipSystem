@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getStudentProfile, getApiBaseUrl } from "../services/api";
 import "./Profile.css";
 
 const emptyProfile = {
@@ -18,21 +19,64 @@ function Profile() {
   const [profile, setProfile] = useState(emptyProfile);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedProfile = localStorage.getItem("tribalStudentProfile");
+    async function loadProfile() {
+      const token = localStorage.getItem("token");
 
-      if (savedProfile) {
+      if (!token) {
+        setMessage("Please log in to view your student profile.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getStudentProfile(token);
+        const backendProfile = data.profile || {};
+
+        // Education level is retained locally because the current
+        // backend schema does not have a separate education field.
+        let localProfile = {};
+
+        try {
+          localProfile = JSON.parse(
+            localStorage.getItem("tribalStudentProfile") || "{}"
+          );
+        } catch {
+          localProfile = {};
+        }
+
         setProfile({
           ...emptyProfile,
-          ...JSON.parse(savedProfile),
+          ...localProfile,
+          name: data.name || "",
+          email: data.email || "",
+          state: backendProfile.state || "",
+          category: backendProfile.category || "ST",
+          education: localProfile.education || "",
+          course: backendProfile.course || "",
+          institution: backendProfile.college || "",
+          familyIncome:
+            backendProfile.family_income != null
+              ? String(backendProfile.family_income)
+              : "",
         });
+
         setSaved(true);
+        setMessage("");
+      } catch (error) {
+        setMessage(
+          error.message ||
+            "Could not load your profile. Please log in again."
+        );
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      setMessage("Could not load the saved profile.");
     }
+
+    loadProfile();
   }, []);
 
   const handleChange = (event) => {
@@ -47,22 +91,112 @@ function Profile() {
     setSaved(false);
   };
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault();
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setMessage("Please log in before saving your profile.");
+      return;
+    }
+
     try {
+      setIsSaving(true);
+      setMessage("");
+
+      const baseUrl = getApiBaseUrl().replace(/\/+$/, "");
+      const apiRoot = baseUrl.endsWith("/api")
+        ? baseUrl
+        : `${baseUrl}/api`;
+
+      const response = await fetch(`${apiRoot}/profile/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: profile.name.trim(),
+          state: profile.state,
+          category: profile.category,
+          course: profile.course,
+          college: profile.institution,
+          family_income:
+            profile.familyIncome === ""
+              ? null
+              : Number(profile.familyIncome),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.detail || "Unable to save your profile."
+        );
+      }
+
+      // Keep education level locally until the backend supports it.
       localStorage.setItem(
         "tribalStudentProfile",
-        JSON.stringify(profile)
+        JSON.stringify({
+          ...profile,
+          name: data.name || profile.name.trim(),
+          email: data.email || profile.email,
+        })
+      );
+
+      setProfile((previousProfile) => ({
+        ...previousProfile,
+        name: data.name || previousProfile.name.trim(),
+        email: data.email || previousProfile.email,
+        state: data.profile?.state ?? previousProfile.state,
+        category: data.profile?.category ?? previousProfile.category,
+        course: data.profile?.course ?? previousProfile.course,
+        institution:
+          data.profile?.college ?? previousProfile.institution,
+        familyIncome:
+          data.profile?.family_income != null
+            ? String(data.profile.family_income)
+            : previousProfile.familyIncome,
+      }));
+
+      // Keep the saved student name in sync with the login details.
+      const student = JSON.parse(
+        localStorage.getItem("student") || "{}"
+      );
+
+      localStorage.setItem(
+        "student",
+        JSON.stringify({
+          ...student,
+          name: data.name || profile.name.trim(),
+          email: data.email || profile.email,
+        })
       );
 
       setMessage("Your profile has been saved successfully!");
       setSaved(true);
-    } catch {
-      setMessage("Unable to save your profile. Please try again.");
+    } catch (error) {
+      setMessage(
+        error.message || "Unable to save your profile. Please try again."
+      );
       setSaved(false);
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <main className="profile-page">
+        <section className="profile-card">
+          <p>Loading your student profile...</p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="profile-page">
@@ -112,9 +246,8 @@ function Profile() {
               id="profile-email"
               name="email"
               type="email"
-              placeholder="Enter your email"
               value={profile.email}
-              onChange={handleChange}
+              readOnly
               autoComplete="email"
               required
             />
@@ -207,16 +340,23 @@ function Profile() {
             />
           </div>
 
-          <button className="profile-save-button" type="submit">
-            {saved ? "Update Profile" : "Save Profile"}
+          <button
+            className="profile-save-button"
+            type="submit"
+            disabled={isSaving}
+          >
+            {isSaving
+              ? "Saving Profile..."
+              : saved
+                ? "Update Profile"
+                : "Save Profile"}
           </button>
         </form>
 
         <p className="profile-note">
           {saved
-            ? "Your profile is saved in this browser."
-            : "Save your details to keep your profile updated."}
-          {" "}This version is not yet connected to your friend's backend.
+            ? "Your supported profile details are saved to your account."
+            : "Complete your details and save your profile."}
         </p>
       </section>
 

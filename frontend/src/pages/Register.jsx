@@ -1,6 +1,6 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { registerStudent } from "../services/api";
 import "./Auth.css";
 
 function getPasswordStrength(password) {
@@ -23,6 +23,8 @@ function getPasswordStrength(password) {
 }
 
 function Register() {
+  const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,11 +32,15 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const strength = getPasswordStrength(password);
 
-  const handleRegister = (event) => {
+  const handleRegister = async (event) => {
     event.preventDefault();
+
+    alert("Register button clicked!");
+
     setMessage("");
 
     if (password.length < 8) {
@@ -47,9 +53,33 @@ function Register() {
       return;
     }
 
-    setMessage(
-      "Registration page is ready. Backend account creation will be added later."
-    );
+    try {
+      setIsLoading(true);
+      setMessage("Connecting to the server...");
+
+      const result = await registerStudent({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+
+      console.log("Registration successful:", result);
+
+      navigate("/login", {
+        state: {
+          message: "Account created successfully! Please log in.",
+          email: email.trim(),
+        },
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+
+      setMessage(
+        error.message || "Registration failed. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -65,7 +95,7 @@ function Register() {
         </p>
 
         {message && (
-          <div className="auth-message" role="status">
+          <div className="auth-message" role="alert">
             {message}
           </div>
         )}
@@ -77,7 +107,10 @@ function Register() {
             type="text"
             placeholder="Enter your full name"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => {
+              setName(event.target.value);
+              setMessage("");
+            }}
             autoComplete="name"
             required
           />
@@ -88,7 +121,10 @@ function Register() {
             type="email"
             placeholder="Enter your email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+              setMessage("");
+            }}
             autoComplete="email"
             required
           />
@@ -181,8 +217,12 @@ function Register() {
             </button>
           </div>
 
-          <button className="auth-button" type="submit">
-            Create Account
+          <button
+            className="auth-button"
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 

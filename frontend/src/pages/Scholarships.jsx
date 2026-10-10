@@ -2,6 +2,10 @@
 import { useEffect, useState } from "react";
 import "./Scholarships.css";
 import scholarshipData from "../scholarshipData";
+import {
+  getScholarships,
+  submitApplication,
+} from "../services/api";
 
 const emptyProfile = {
   education: "",
@@ -34,15 +38,43 @@ function parseIncome(value) {
   return Number.isFinite(income) && income >= 0 ? income : null;
 }
 
+function normalizeScholarship(item) {
+  return {
+    ...item,
+    id: item.id,
+    name: item.name || "Scholarship opportunity",
+    provider: item.provider || "Government Scholarship Programme",
+    level: item.level || "All Levels",
+    portalType: item.portalType || "National",
+    state: item.state || "All",
+    category: item.category || "All",
+    description:
+      item.description || "Check the official scheme guidelines.",
+    eligibility:
+      item.eligibility || "Verify eligibility on the official portal.",
+    courseCriteria:
+      item.courseCriteria || "Check the official scheme guidelines.",
+    eligibleCourses: Array.isArray(item.eligibleCourses)
+      ? item.eligibleCourses
+      : [],
+    deadline: item.deadline || "Check the official portal",
+    link: item.link || "",
+  };
+}
+
 function Scholarships() {
+  const [apiScholarships, setApiScholarships] = useState(null);
+  const [apiMessage, setApiMessage] = useState("");
+
   const [studentProfile, setStudentProfile] = useState(() => {
     try {
       const saved = localStorage.getItem("tribalStudentProfile");
+
       return saved
         ? { ...emptyProfile, ...JSON.parse(saved) }
-        : emptyProfile;
+        : { ...emptyProfile };
     } catch {
-      return emptyProfile;
+      return { ...emptyProfile };
     }
   });
 
@@ -54,7 +86,11 @@ function Scholarships() {
 
   const [savedScholarships, setSavedScholarships] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("savedScholarships")) || [];
+      const saved = JSON.parse(
+        localStorage.getItem("savedScholarships")
+      );
+
+      return Array.isArray(saved) ? saved : [];
     } catch {
       return [];
     }
@@ -62,6 +98,9 @@ function Scholarships() {
 
   const [selectedScholarship, setSelectedScholarship] = useState(null);
   const [message, setMessage] = useState("");
+
+  // Tracks which scholarship is currently being applied for.
+  const [applyingId, setApplyingId] = useState(null);
 
   const {
     education: studentLevel,
@@ -71,6 +110,40 @@ function Scholarships() {
     familyIncome,
   } = studentProfile;
 
+  // Load scholarships from the backend.
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadScholarships() {
+      try {
+        const data = await getScholarships();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Unexpected scholarship response");
+        }
+
+        if (!cancelled) {
+          setApiScholarships(data.map(normalizeScholarship));
+          setApiMessage("Connected to the backend successfully.");
+        }
+      } catch {
+        if (!cancelled) {
+          setApiScholarships(null);
+          setApiMessage(
+            "Backend unavailable. Showing local scholarship data."
+          );
+        }
+      }
+    }
+
+    loadScholarships();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Save the scholarship matching profile locally.
   useEffect(() => {
     localStorage.setItem(
       "tribalStudentProfile",
@@ -78,6 +151,7 @@ function Scholarships() {
     );
   }, [studentProfile]);
 
+  // Save the student's saved scholarship list locally.
   useEffect(() => {
     localStorage.setItem(
       "savedScholarships",
@@ -94,7 +168,39 @@ function Scholarships() {
     }));
   };
 
-  // Match percentage: only evaluate criteria with known information.
+  // Submit an application to the FastAPI backend.
+  const handleApply = async (item) => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setMessage("Please log in before applying for a scholarship.");
+      return;
+    }
+
+    try {
+      setApplyingId(item.id);
+      setMessage("");
+
+      const data = await submitApplication(item.id, token);
+
+      setMessage(
+        `${data.message}: ${data.scholarship_name}`
+      );
+    } catch (error) {
+      setMessage(
+        error.message || "Unable to submit your application."
+      );
+    } finally {
+      setApplyingId(null);
+    }
+  };
+
+  // Use backend records when available; otherwise use local data.
+  const displayScholarships =
+    apiScholarships !== null
+      ? apiScholarships
+      : scholarshipData.map(normalizeScholarship);
+
   const getMatchPercentage = (item) => {
     const checks = [];
     const income = parseIncome(familyIncome);
@@ -111,16 +217,13 @@ function Scholarships() {
       checks.push(matchesField(item.category, studentCategory));
     }
 
-    const courses = item.eligibleCourses ?? item.courses;
+    const courses = item.eligibleCourses ?? item.courses ?? [];
 
-    if (
-      studentCourse.trim() &&
-      Array.isArray(courses) &&
-      courses.length > 0
-    ) {
+    if (studentCourse.trim() && courses.length > 0) {
       checks.push(
         courses.some(
-          (course) => normalize(course) === normalize(studentCourse)
+          (course) =>
+            normalize(course) === normalize(studentCourse)
         )
       );
     }
@@ -150,9 +253,7 @@ function Scholarships() {
       reasons.push({
         type: matched ? "success" : "warning",
         text: matched
-          ? item.level === "All Levels"
-            ? "This listing covers multiple education levels; confirm the specific scheme."
-            : "Your selected education level matches this listing."
+          ? `Education level matches this ${item.level} listing.`
           : `This listing is for ${item.level}, not ${studentLevel}.`,
       });
     }
@@ -163,10 +264,8 @@ function Scholarships() {
       reasons.push({
         type: matched ? "success" : "warning",
         text: matched
-          ? item.state === "All"
-            ? "This listing is not restricted to a single state."
-            : "Your selected state matches this listing."
-          : `This listing is associated with ${item.state}, not ${studentState}.`,
+          ? `State matches this ${item.state} listing.`
+          : `This listing is associated with ${item.state}.`,
       });
     }
 
@@ -176,19 +275,18 @@ function Scholarships() {
       reasons.push({
         type: matched ? "success" : "warning",
         text: matched
-          ? item.category === "All"
-            ? "The portal includes scholarships for different categories."
-            : "Your selected category matches this listing."
+          ? `Category matches this ${item.category} listing.`
           : `The listed category is ${item.category}.`,
       });
     }
 
-    const courses = item.eligibleCourses ?? item.courses;
+    const courses = item.eligibleCourses ?? item.courses ?? [];
 
     if (studentCourse.trim()) {
-      if (Array.isArray(courses) && courses.length > 0) {
+      if (courses.length > 0) {
         const matched = courses.some(
-          (course) => normalize(course) === normalize(studentCourse)
+          (course) =>
+            normalize(course) === normalize(studentCourse)
         );
 
         reasons.push({
@@ -214,8 +312,12 @@ function Scholarships() {
         reasons.push({
           type: matched ? "success" : "warning",
           text: matched
-            ? `Your annual family income is within the limit of ₹${Number(item.incomeLimit).toLocaleString("en-IN")}.`
-            : `Your annual family income exceeds the limit of ₹${Number(item.incomeLimit).toLocaleString("en-IN")}.`,
+            ? `Your annual family income is within ₹${Number(
+                item.incomeLimit
+              ).toLocaleString("en-IN")}.`
+            : `Your annual family income exceeds ₹${Number(
+                item.incomeLimit
+              ).toLocaleString("en-IN")}.`,
         });
       }
 
@@ -225,23 +327,34 @@ function Scholarships() {
         reasons.push({
           type: matched ? "success" : "warning",
           text: matched
-            ? `Your annual family income is above ₹${Number(item.minimumIncome).toLocaleString("en-IN")}.`
-            : `Your annual family income does not exceed ₹${Number(item.minimumIncome).toLocaleString("en-IN")}.`,
+            ? `Your annual family income is above ₹${Number(
+                item.minimumIncome
+              ).toLocaleString("en-IN")}.`
+            : `Your annual family income does not exceed ₹${Number(
+                item.minimumIncome
+              ).toLocaleString("en-IN")}.`,
         });
       }
 
-      if (item.incomeLimit == null && item.minimumIncome == null) {
+      if (
+        item.incomeLimit == null &&
+        item.minimumIncome == null
+      ) {
         reasons.push({
           type: "info",
-          text: "No specific income threshold is provided. Verify the official scheme rules.",
+          text:
+            "No specific income threshold is provided. Verify the official scheme rules.",
         });
       }
     }
 
-    if (normalize(item.name).includes("national scholarship portal")) {
+    if (
+      normalize(item.name).includes("national scholarship portal")
+    ) {
       reasons.push({
         type: "info",
-        text: "This is a portal listing, not an individual scholarship. Eligibility depends on the specific scheme.",
+        text:
+          "This is a portal listing, not an individual scholarship. Eligibility depends on the specific scheme.",
       });
     }
 
@@ -257,12 +370,19 @@ function Scholarships() {
     if (isSaved(item.id)) {
       setSavedScholarships((previous) =>
         previous.filter(
-          (saved) => (typeof saved === "object" ? saved.id : saved) !== item.id
+          (saved) =>
+            (typeof saved === "object" ? saved.id : saved) !==
+            item.id
         )
       );
+
       setMessage("Scholarship removed from saved list.");
     } else {
-      setSavedScholarships((previous) => [...previous, item.id]);
+      setSavedScholarships((previous) => [
+        ...previous,
+        item.id,
+      ]);
+
       setMessage("Scholarship saved successfully.");
     }
   };
@@ -283,7 +403,7 @@ function Scholarships() {
     setMessage("");
   };
 
-  const filteredScholarships = scholarshipData.filter((item) => {
+  const filteredScholarships = displayScholarships.filter((item) => {
     const searchText = normalize(search);
 
     const matchesSearch =
@@ -294,21 +414,18 @@ function Scholarships() {
       normalize(item.eligibility).includes(searchText);
 
     const matchesLevelFilter =
-      level === "All Levels" ||
-      matchesField(item.level, level);
+      level === "All Levels" || matchesField(item.level, level);
 
     const matchesPortal =
       portal === "All" ||
       normalize(item.portalType) === normalize(portal);
 
-    // A School-specific listing must not match a College profile.
     const matchesProfile =
       !showMatches ||
-      (
-        (!studentLevel ||
-          studentLevel === "All Levels" ||
-          normalize(item.level) === "all levels" ||
-          normalize(item.level) === normalize(studentLevel)) &&
+      ((!studentLevel ||
+        studentLevel === "All Levels" ||
+        normalize(item.level) === "all levels" ||
+        normalize(item.level) === normalize(studentLevel)) &&
         (!studentState ||
           studentState === "All" ||
           normalize(item.state) === "all" ||
@@ -316,8 +433,7 @@ function Scholarships() {
         (!studentCategory ||
           studentCategory === "All" ||
           normalize(item.category) === "all" ||
-          normalize(item.category) === normalize(studentCategory))
-      );
+          normalize(item.category) === normalize(studentCategory)));
 
     const matchesSaved = !showSavedOnly || isSaved(item.id);
 
@@ -339,6 +455,9 @@ function Scholarships() {
           for your education.
         </p>
       </section>
+
+      {apiMessage && <p role="status">{apiMessage}</p>}
+      {message && <p role="status">{message}</p>}
 
       <section className="student-profile-section">
         <h2>Student Profile</h2>
@@ -404,7 +523,9 @@ function Scholarships() {
             </div>
 
             <div>
-              <label htmlFor="familyIncome">Annual Family Income (₹)</label>
+              <label htmlFor="familyIncome">
+                Annual Family Income (₹)
+              </label>
               <input
                 id="familyIncome"
                 name="familyIncome"
@@ -421,8 +542,6 @@ function Scholarships() {
         </form>
       </section>
 
-      {message && <p role="status">{message}</p>}
-
       <section className="scholarship-filters">
         <h2>Explore Scholarships</h2>
 
@@ -434,13 +553,19 @@ function Scholarships() {
             onChange={(event) => setSearch(event.target.value)}
           />
 
-          <select value={level} onChange={(event) => setLevel(event.target.value)}>
+          <select
+            value={level}
+            onChange={(event) => setLevel(event.target.value)}
+          >
             <option value="All Levels">All Education Levels</option>
             <option value="School">School</option>
             <option value="College">College</option>
           </select>
 
-          <select value={portal} onChange={(event) => setPortal(event.target.value)}>
+          <select
+            value={portal}
+            onChange={(event) => setPortal(event.target.value)}
+          >
             <option value="All">All Portals</option>
             <option value="National">National</option>
             <option value="State">State</option>
@@ -481,9 +606,14 @@ function Scholarships() {
               <div className="scholarship-card-header">
                 <div>
                   <h3>{item.name}</h3>
-                  <p className="scholarship-provider">{item.provider}</p>
+                  <p className="scholarship-provider">
+                    {item.provider}
+                  </p>
                 </div>
-                <span className="scholarship-level">{item.level}</span>
+
+                <span className="scholarship-level">
+                  {item.level}
+                </span>
               </div>
 
               <p>{item.description}</p>
@@ -492,6 +622,7 @@ function Scholarships() {
                 <p className="match-percentage-heading">
                   Profile Match: {percentage}%
                 </p>
+
                 <div
                   className="match-progress-track"
                   role="progressbar"
@@ -524,7 +655,10 @@ function Scholarships() {
                 )}
               </div>
 
-              <p><strong>Deadline:</strong> {item.deadline}</p>
+              <p>
+                <strong>Deadline:</strong>{" "}
+                {item.deadline || "Check official portal"}
+              </p>
 
               <div className="scholarship-card-actions">
                 <button
@@ -534,13 +668,36 @@ function Scholarships() {
                   View Details
                 </button>
 
-                <button type="button" onClick={() => toggleSaved(item)}>
-                  {isSaved(item.id) ? "Remove Saved" : "Save Scholarship"}
+                <button
+                  type="button"
+                  onClick={() => toggleSaved(item)}
+                >
+                  {isSaved(item.id)
+                    ? "Remove Saved"
+                    : "Save Scholarship"}
                 </button>
 
-                <a href={item.link} target="_blank" rel="noopener noreferrer">
-                  Official Portal
-                </a>
+                <button
+                  type="button"
+                  onClick={() => handleApply(item)}
+                  disabled={applyingId === item.id}
+                >
+                  {applyingId === item.id
+                    ? "Applying..."
+                    : "Apply"}
+                </button>
+
+                {item.link ? (
+                  <a
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Official Portal
+                  </a>
+                ) : (
+                  <span>Official link not available</span>
+                )}
               </div>
             </article>
           );
@@ -551,6 +708,7 @@ function Scholarships() {
         <div className="no-scholarships">
           <h3>No scholarships found</h3>
           <p>Try changing your search or filters.</p>
+
           <button type="button" onClick={resetFilters}>
             Show All Scholarships
           </button>
@@ -581,14 +739,46 @@ function Scholarships() {
               ×
             </button>
 
-            <h2 id="scholarship-modal-title">{selectedScholarship.name}</h2>
-            <p><strong>Provider:</strong> {selectedScholarship.provider}</p>
-            <p><strong>Education Level:</strong> {selectedScholarship.level}</p>
-            <p><strong>Portal Type:</strong> {selectedScholarship.portalType}</p>
-            <p><strong>State:</strong> {selectedScholarship.state}</p>
-            <p><strong>Category:</strong> {selectedScholarship.category}</p>
-            <p><strong>Description:</strong> {selectedScholarship.description}</p>
-            <p><strong>Eligibility:</strong> {selectedScholarship.eligibility}</p>
+            <h2 id="scholarship-modal-title">
+              {selectedScholarship.name}
+            </h2>
+
+            <p>
+              <strong>Provider:</strong>{" "}
+              {selectedScholarship.provider || "Not specified"}
+            </p>
+
+            <p>
+              <strong>Education Level:</strong>{" "}
+              {selectedScholarship.level || "Not specified"}
+            </p>
+
+            <p>
+              <strong>Portal Type:</strong>{" "}
+              {selectedScholarship.portalType || "Not specified"}
+            </p>
+
+            <p>
+              <strong>State:</strong>{" "}
+              {selectedScholarship.state || "Not specified"}
+            </p>
+
+            <p>
+              <strong>Category:</strong>{" "}
+              {selectedScholarship.category || "Not specified"}
+            </p>
+
+            <p>
+              <strong>Description:</strong>{" "}
+              {selectedScholarship.description}
+            </p>
+
+            <p>
+              <strong>Eligibility:</strong>{" "}
+              {selectedScholarship.eligibility ||
+                "Check the official scheme guidelines."}
+            </p>
+
             <p>
               <strong>Course Requirements:</strong>{" "}
               {selectedScholarship.courseCriteria ||
@@ -598,26 +788,40 @@ function Scholarships() {
             {selectedScholarship.incomeLimit != null && (
               <p>
                 <strong>Maximum Annual Income:</strong>{" "}
-                ₹{Number(selectedScholarship.incomeLimit).toLocaleString("en-IN")}
+                ₹
+                {Number(
+                  selectedScholarship.incomeLimit
+                ).toLocaleString("en-IN")}
               </p>
             )}
 
             {selectedScholarship.minimumIncome != null && (
               <p>
                 <strong>Minimum Annual Income:</strong>{" "}
-                Above ₹{Number(selectedScholarship.minimumIncome).toLocaleString("en-IN")}
+                Above ₹
+                {Number(
+                  selectedScholarship.minimumIncome
+                ).toLocaleString("en-IN")}
               </p>
             )}
 
-            <p><strong>Deadline:</strong> {selectedScholarship.deadline}</p>
+            <p>
+              <strong>Deadline:</strong>{" "}
+              {selectedScholarship.deadline ||
+                "Check official portal"}
+            </p>
 
-            <a
-              href={selectedScholarship.link}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Visit Official Portal
-            </a>
+            {selectedScholarship.link ? (
+              <a
+                href={selectedScholarship.link}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Visit Official Portal
+              </a>
+            ) : (
+              <p>Official link is not available for this listing.</p>
+            )}
           </div>
         </div>
       )}

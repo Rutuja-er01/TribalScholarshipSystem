@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import "./App.css";
@@ -13,6 +12,8 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import DocumentChecklist from "./pages/DocumentChecklist";
 import ApplicationGuide from "./pages/ApplicationGuide";
+import MyApplications from "./pages/MyApplications";
+import Admin from "./pages/Admin";
 
 function App() {
   const location = useLocation();
@@ -26,6 +27,11 @@ function App() {
   const closeMenu = () => {
     setMenuOpen(false);
   };
+
+  // Keep the admin page separate from the student navigation.
+  if (location.pathname === "/admin") {
+    return <Admin />;
+  }
 
   return (
     <div className="app">
@@ -79,19 +85,25 @@ function App() {
             <Link
               to="/dashboard"
               onClick={closeMenu}
-              className={
-                location.pathname === "/dashboard" ? "active" : ""
-              }
+              className={location.pathname === "/dashboard" ? "active" : ""}
             >
               Dashboard
             </Link>
 
             <Link
-              to="/profile"
+              to="/my-applications"
               onClick={closeMenu}
               className={
-                location.pathname === "/profile" ? "active" : ""
+                location.pathname === "/my-applications" ? "active" : ""
               }
+            >
+              My Applications
+            </Link>
+
+            <Link
+              to="/profile"
+              onClick={closeMenu}
+              className={location.pathname === "/profile" ? "active" : ""}
             >
               Profile
             </Link>
@@ -99,9 +111,7 @@ function App() {
             <Link
               to="/documents"
               onClick={closeMenu}
-              className={
-                location.pathname === "/documents" ? "active" : ""
-              }
+              className={location.pathname === "/documents" ? "active" : ""}
             >
               Document Checklist
             </Link>
@@ -110,9 +120,7 @@ function App() {
               to="/application-guide"
               onClick={closeMenu}
               className={
-                location.pathname === "/application-guide"
-                  ? "active"
-                  : ""
+                location.pathname === "/application-guide" ? "active" : ""
               }
             >
               Application Guide
@@ -121,9 +129,7 @@ function App() {
             <Link
               to="/about"
               onClick={closeMenu}
-              className={
-                location.pathname === "/about" ? "active" : ""
-              }
+              className={location.pathname === "/about" ? "active" : ""}
             >
               About
             </Link>
@@ -131,9 +137,7 @@ function App() {
             <Link
               to="/login"
               onClick={closeMenu}
-              className={
-                location.pathname === "/login" ? "active" : ""
-              }
+              className={location.pathname === "/login" ? "active" : ""}
             >
               Login
             </Link>
@@ -141,9 +145,7 @@ function App() {
             <Link
               to="/register"
               onClick={closeMenu}
-              className={
-                location.pathname === "/register" ? "active" : ""
-              }
+              className={location.pathname === "/register" ? "active" : ""}
             >
               Register
             </Link>
@@ -155,50 +157,28 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
 
-        <Route
-          path="/scholarships"
-          element={<Scholarships />}
-        />
+        <Route path="/scholarships" element={<Scholarships />} />
 
-        <Route
-          path="/scholarships/:id"
-          element={<ScholarshipDetails />}
-        />
+        <Route path="/scholarships/:id" element={<ScholarshipDetails />} />
 
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
+        <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route
-          path="/profile"
-          element={<Profile />}
-        />
+        <Route path="/my-applications" element={<MyApplications />} />
 
-        <Route
-          path="/documents"
-          element={<DocumentChecklist />}
-        />
+        <Route path="/profile" element={<Profile />} />
 
-        <Route
-          path="/application-guide"
-          element={<ApplicationGuide />}
-        />
+        <Route path="/documents" element={<DocumentChecklist />} />
 
-        <Route
-          path="/about"
-          element={<About />}
-        />
+        <Route path="/application-guide" element={<ApplicationGuide />} />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+        <Route path="/about" element={<About />} />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
+
+        {/* Admin Dashboard */}
+        <Route path="/admin" element={<Admin />} />
 
         {/* Page Not Found */}
         <Route
@@ -211,11 +191,7 @@ function App() {
               }}
             >
               <h1>404 - Page Not Found</h1>
-
-              <p>
-                The page you're looking for doesn't exist.
-              </p>
-
+              <p>The page you're looking for doesn't exist.</p>
               <Link to="/">Return to Home</Link>
             </main>
           }
