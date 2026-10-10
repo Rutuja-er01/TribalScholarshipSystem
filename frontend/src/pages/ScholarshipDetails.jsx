@@ -1,202 +1,700 @@
-import { Link, useParams } from "react-router-dom";
-import "./ScholarshipDetails.css";
 
-const scholarshipDetailsData = {
-  "post-matric-st": {
-    title: "Post-Matric Scholarship for ST Students",
-    level: "College Students",
-    description:
-      "This scholarship is intended to support eligible Scheduled Tribe students pursuing education after matriculation.",
-    eligibility: [
-      "The student belongs to the Scheduled Tribe (ST) category.",
-      "The student is studying in an eligible post-matric course.",
-      "Family income and other conditions must meet the applicable scheme rules.",
-    ],
-    benefits: [
-      "Eligible educational fee support",
-      "Possible maintenance allowance, subject to scheme rules",
-      "Support for continuing higher education",
-    ],
-    documents: [
-      "ST caste certificate",
-      "Income certificate, if required",
-      "Previous examination marksheet",
-      "Aadhaar card, where required",
-      "Bank account details",
-      "Current admission or bonafide certificate",
-    ],
-    link: "https://scholarships.gov.in/",
-  },
+import { useEffect, useState } from "react";
+import scholarshipData from "../scholarshipData";
+import "./Scholarships.css";
 
-  "pre-matric-st": {
-    title: "Pre-Matric Scholarship for ST Students",
-    level: "School Students",
-    description:
-      "This scholarship category supports eligible Scheduled Tribe students studying at school level.",
-    eligibility: [
-      "The student belongs to the Scheduled Tribe (ST) category.",
-      "The student is enrolled in an eligible school and class.",
-      "The student meets the applicable income and scheme conditions.",
-    ],
-    benefits: [
-      "Financial assistance according to the scheme",
-      "Support for school education expenses",
-      "Encouragement to continue schooling",
-    ],
-    documents: [
-      "ST caste certificate",
-      "Income certificate, if required",
-      "School identity or bonafide certificate",
-      "Previous marksheet, if required",
-      "Bank account details, if required",
-    ],
-    link: "https://scholarships.gov.in/",
-  },
-
-  "national-portal": {
-    title: "National Scholarship Portal Opportunities",
-    level: "Multiple Education Levels",
-    description:
-      "The National Scholarship Portal provides information and application access for various government scholarship schemes.",
-    eligibility: [
-      "Eligibility depends on the individual scholarship scheme.",
-      "Category, education level, income, and academic conditions may apply.",
-      "Check the current official notification before applying.",
-    ],
-    benefits: [
-      "Access to multiple scholarship schemes",
-      "Online application facilities for available schemes",
-      "Official scheme guidelines and updates",
-    ],
-    documents: [
-      "Identity documents, as specified by the scheme",
-      "Academic marksheets",
-      "Income and category certificates, where required",
-      "Bank details, where required",
-    ],
-    link: "https://scholarships.gov.in/",
-  },
-
-  mahadbt: {
-    title: "MahaDBT Scholarship Opportunities",
-    level: "Maharashtra Students",
-    description:
-      "MahaDBT is Maharashtra's official portal for various government benefit schemes, including eligible education-related schemes.",
-    eligibility: [
-      "The student meets the relevant scheme's category requirements.",
-      "The student satisfies Maharashtra domicile and other conditions where applicable.",
-      "Income, course, and institution requirements depend on the scheme.",
-    ],
-    benefits: [
-      "Access to eligible state scholarship schemes",
-      "Online application and tracking facilities",
-      "Scheme-specific educational financial assistance",
-    ],
-    documents: [
-      "Domicile certificate, where required",
-      "Caste certificate, where required",
-      "Income certificate, where required",
-      "Academic marksheets",
-      "Admission and fee details",
-      "Bank account details",
-    ],
-    link: "https://mahadbt.maharashtra.gov.in/",
-  },
+const emptyProfile = {
+  name: "",
+  email: "",
+  state: "",
+  category: "ST",
+  education: "",
+  educationLevel: "",
+  course: "",
+  institution: "",
+  familyIncome: "",
+  annualIncome: "",
 };
 
-function ScholarshipDetails() {
-  const { id } = useParams();
+function readStorage(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
-  const scholarship = scholarshipDetailsData[id];
+function getEducationLevel(profile) {
+  const level =
+    profile.educationLevel || profile.education || profile.level || "";
 
-  if (!scholarship) {
-    return (
-      <main className="details-page">
-        <div className="details-card not-found">
-          <h1>Scholarship Not Found</h1>
-          <p>We couldn't find the scholarship you're looking for.</p>
+  const levelMap = {
+    Diploma: "College",
+    Undergraduate: "College",
+    Postgraduate: "College",
+    Other: "",
+  };
 
-          <Link to="/scholarships" className="back-button">
-            Back to Scholarships
-          </Link>
-        </div>
-      </main>
-    );
+  return levelMap[level] ?? level;
+}
+
+function getIncomeStatus(item, studentIncome) {
+  const incomeText = String(studentIncome).trim();
+  const income = Number(incomeText);
+
+  const hasIncome =
+    incomeText !== "" &&
+    Number.isFinite(income) &&
+    income >= 0;
+
+  const hasMaximumIncome = Number.isFinite(item.incomeLimit);
+  const hasMinimumIncome = Number.isFinite(item.minimumIncome);
+
+  if (!hasIncome || (!hasMaximumIncome && !hasMinimumIncome)) {
+    return "unknown";
   }
 
+  const meetsMaximum =
+    !hasMaximumIncome || income <= item.incomeLimit;
+
+  const meetsMinimum =
+    !hasMinimumIncome || income > item.minimumIncome;
+
+  return meetsMaximum && meetsMinimum ? "match" : "mismatch";
+}
+
+function Scholarships() {
+  const [search, setSearch] = useState("");
+  const [levelFilter, setLevelFilter] = useState("All");
+  const [portalFilter, setPortalFilter] = useState("All");
+  const [showMatches, setShowMatches] = useState(false);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
+
+  const [savedScholarships, setSavedScholarships] = useState(() => {
+    const saved = readStorage("savedScholarships", []);
+    return Array.isArray(saved) ? saved : [];
+  });
+
+  const [studentProfile, setStudentProfile] = useState(() => {
+    const saved = readStorage("tribalStudentProfile", emptyProfile);
+
+    return saved && typeof saved === "object" && !Array.isArray(saved)
+      ? { ...emptyProfile, ...saved }
+      : { ...emptyProfile };
+  });
+
+  const [studentLevel, setStudentLevel] = useState("");
+  const [studentState, setStudentState] = useState("");
+  const [studentCategory, setStudentCategory] = useState("");
+  const [studentCourse, setStudentCourse] = useState("");
+  const [studentIncome, setStudentIncome] = useState("");
+
+  const [selectedScholarship, setSelectedScholarship] = useState(null);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setStudentLevel(getEducationLevel(studentProfile));
+    setStudentState(studentProfile.state || "");
+    setStudentCategory(studentProfile.category || "");
+    setStudentCourse(studentProfile.course || "");
+    setStudentIncome(
+      studentProfile.annualIncome ??
+        studentProfile.familyIncome ??
+        studentProfile.income ??
+        ""
+    );
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "savedScholarships",
+        JSON.stringify(savedScholarships)
+      );
+    } catch {
+      setMessage("Unable to save scholarships in this browser.");
+    }
+  }, [savedScholarships]);
+
+  // Calculate a match percentage using only assessable criteria.
+  const getMatchPercentage = (item) => {
+    let score = 0;
+    let total = 0;
+
+    if (studentLevel) {
+      total++;
+      if (
+        item.level === studentLevel ||
+        item.level === "All Levels"
+      ) {
+        score++;
+      }
+    }
+
+    if (studentState) {
+      total++;
+      if (item.state === studentState || item.state === "All") {
+        score++;
+      }
+    }
+
+    if (studentCategory) {
+      total++;
+      if (
+        item.category === studentCategory ||
+        item.category === "All"
+      ) {
+        score++;
+      }
+    }
+
+    if (
+      studentCourse.trim() &&
+      Array.isArray(item.eligibleCourses) &&
+      item.eligibleCourses.length > 0
+    ) {
+      total++;
+
+      const courseMatches = item.eligibleCourses.some(
+        (course) =>
+          typeof course === "string" &&
+          course.toLowerCase() === studentCourse.trim().toLowerCase()
+      );
+
+      if (courseMatches) score++;
+    }
+
+    const incomeStatus = getIncomeStatus(item, studentIncome);
+
+    if (incomeStatus !== "unknown") {
+      total++;
+      if (incomeStatus === "match") score++;
+    }
+
+    return total === 0 ? null : Math.round((score / total) * 100);
+  };
+
+  // Explain known matches, mismatches and unknown criteria.
+  const getMatchReasons = (item) => {
+    const reasons = [];
+
+    if (studentLevel) {
+      const matches =
+        item.level === studentLevel ||
+        item.level === "All Levels";
+
+      reasons.push({
+        type: matches ? "match" : "warning",
+        text: matches
+          ? "Education level matches."
+          : "Education level may not match; check the official rules.",
+      });
+    }
+
+    if (studentState) {
+      const matches =
+        item.state === studentState || item.state === "All";
+
+      reasons.push({
+        type: matches ? "match" : "warning",
+        text: matches
+          ? "State matches this listing."
+          : "Check state and domicile requirements.",
+      });
+    }
+
+    if (studentCategory) {
+      const matches =
+        item.category === studentCategory ||
+        item.category === "All";
+
+      reasons.push({
+        type: matches ? "match" : "warning",
+        text: matches
+          ? "Category matches this listing."
+          : "Category may not match the scheme.",
+      });
+    }
+
+    if (studentCourse.trim()) {
+      if (
+        Array.isArray(item.eligibleCourses) &&
+        item.eligibleCourses.length > 0
+      ) {
+        const courseMatches = item.eligibleCourses.some(
+          (course) =>
+            typeof course === "string" &&
+            course.toLowerCase() === studentCourse.trim().toLowerCase()
+        );
+
+        reasons.push({
+          type: courseMatches ? "match" : "warning",
+          text: courseMatches
+            ? "Course matches the listed eligible courses."
+            : "Course is not in the listed eligible courses.",
+        });
+      } else {
+        reasons.push({
+          type: "verify",
+          text: "Course eligibility is not listed; verify it on the official portal.",
+        });
+      }
+    } else {
+      reasons.push({
+        type: "verify",
+        text: "Enter your course and verify course eligibility.",
+      });
+    }
+
+    const incomeStatus = getIncomeStatus(item, studentIncome);
+
+    if (incomeStatus === "match") {
+      reasons.push({
+        type: "match",
+        text: "Entered income meets the listed income thresholds.",
+      });
+    } else if (incomeStatus === "mismatch") {
+      reasons.push({
+        type: "warning",
+        text: "Entered income does not meet the listed income thresholds.",
+      });
+    } else {
+      reasons.push({
+        type: "verify",
+        text: "Income eligibility is unknown; check the official scheme rules.",
+      });
+    }
+
+    reasons.push({
+      type: "verify",
+      text: "Confirm deadlines, documents and final eligibility on the official portal.",
+    });
+
+    return reasons;
+  };
+
+  const handleProfileSave = (event) => {
+    event.preventDefault();
+
+    const profile = {
+      ...studentProfile,
+      educationLevel: studentLevel,
+      education: studentLevel || studentProfile.education || "",
+      state: studentState,
+      category: studentCategory,
+      course: studentCourse.trim(),
+      annualIncome: studentIncome,
+      familyIncome: studentIncome,
+    };
+
+    try {
+      localStorage.setItem("tribalStudentProfile", JSON.stringify(profile));
+      setStudentProfile(profile);
+      setShowMatches(true);
+      setShowSavedOnly(false);
+      setMessage("Profile saved. Matching scholarships are displayed below.");
+    } catch {
+      setMessage("Unable to save your profile in this browser.");
+    }
+  };
+
+  const isSaved = (item) =>
+    savedScholarships.some(
+      (saved) =>
+        Number(saved?.id ?? saved?.scholarshipId ?? saved) ===
+        Number(item.id)
+    );
+
+  const toggleSaved = (item) => {
+    if (isSaved(item)) {
+      setSavedScholarships((previous) =>
+        previous.filter(
+          (saved) =>
+            Number(saved?.id ?? saved?.scholarshipId ?? saved) !==
+            Number(item.id)
+        )
+      );
+      setMessage("Scholarship removed from saved list.");
+    } else {
+      setSavedScholarships((previous) => [...previous, item]);
+      setMessage("Scholarship saved successfully.");
+    }
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setLevelFilter("All");
+    setPortalFilter("All");
+    setShowMatches(false);
+    setShowSavedOnly(false);
+    setMessage("");
+  };
+
+  const filteredScholarships = scholarshipData.filter((item) => {
+    const term = search.toLowerCase().trim();
+
+    const matchesSearch =
+      (item.name || "").toLowerCase().includes(term) ||
+      (item.provider || "").toLowerCase().includes(term) ||
+      (item.description || "").toLowerCase().includes(term);
+
+    const matchesLevel =
+      levelFilter === "All" ||
+      item.level === levelFilter ||
+      item.level === "All Levels";
+
+    const matchesPortal =
+      portalFilter === "All" || item.portalType === portalFilter;
+
+    const matchesProfile =
+      (!studentLevel ||
+        item.level === studentLevel ||
+        item.level === "All Levels") &&
+      (!studentState ||
+        item.state === studentState ||
+        item.state === "All") &&
+      (!studentCategory ||
+        item.category === studentCategory ||
+        item.category === "All") &&
+      getIncomeStatus(item, studentIncome) !== "mismatch";
+
+    const matchesSaved = !showSavedOnly || isSaved(item);
+    const matchesStudent = !showMatches || matchesProfile;
+
+    return (
+      matchesSearch &&
+      matchesLevel &&
+      matchesPortal &&
+      matchesSaved &&
+      matchesStudent
+    );
+  });
+
   return (
-    <main className="details-page">
-      <Link to="/scholarships" className="back-link">
-        ← Back to Scholarships
-      </Link>
-
-      <section className="details-hero">
-        <span className="details-icon">🎓</span>
-        <span className="details-label">{scholarship.level}</span>
-
-        <h1>{scholarship.title}</h1>
-        <p>{scholarship.description}</p>
-      </section>
-
-      <div className="details-grid">
-        <section className="details-card">
-          <h2>✅ Eligibility Criteria</h2>
-          <ul>
-            {scholarship.eligibility.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="details-card">
-          <h2>🌱 Benefits</h2>
-          <ul>
-            {scholarship.benefits.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="details-card documents-card">
-          <h2>📄 Required Documents</h2>
-
-          <p>
-            These are common examples. The official scheme may require
-            different or additional documents.
-          </p>
-
-          <ul>
-            {scholarship.documents.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
-        </section>
-      </div>
-
-      <section className="apply-section">
-        <h2>Ready to Explore This Scholarship?</h2>
-
+    <div className="scholarships-page">
+      <section className="scholarships-hero">
+        <h1>Find Scholarships</h1>
         <p>
-          Check the official portal for current eligibility rules,
-          deadlines, required documents, and application availability.
+          Explore scholarship opportunities that may suit your education
+          and profile.
         </p>
 
-        <a
-          href={scholarship.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="apply-button"
-        >
-          Visit Official Portal ↗
-        </a>
+        <input
+          type="search"
+          placeholder="Search scholarships..."
+          aria-label="Search scholarships"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
       </section>
 
-      <p className="details-disclaimer">
-        Note: Scholarship information is for guidance. Eligibility, benefits,
-        and required documents must be verified on the official portal.
-      </p>
-    </main>
+      <section className="student-profile-section">
+        <h2>Find Scholarships for Me</h2>
+        <p>Enter your details to check your profile match.</p>
+
+        <form onSubmit={handleProfileSave}>
+          <div className="profile-form-grid">
+            <div>
+              <label htmlFor="educationLevel">Education Level</label>
+              <select
+                id="educationLevel"
+                value={studentLevel}
+                onChange={(event) => setStudentLevel(event.target.value)}
+              >
+                <option value="">Select education level</option>
+                <option value="School">School</option>
+                <option value="College">College</option>
+                <option value="All Levels">All Levels</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="studentState">State</label>
+              <select
+                id="studentState"
+                value={studentState}
+                onChange={(event) => setStudentState(event.target.value)}
+              >
+                <option value="">Select state</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="All">All States</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="studentCategory">Category</label>
+              <select
+                id="studentCategory"
+                value={studentCategory}
+                onChange={(event) => setStudentCategory(event.target.value)}
+              >
+                <option value="">Select category</option>
+                <option value="ST">Scheduled Tribe (ST)</option>
+                <option value="All">All Categories</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="studentCourse">Course</label>
+              <input
+                id="studentCourse"
+                type="text"
+                placeholder="e.g. B.Tech"
+                value={studentCourse}
+                onChange={(event) => setStudentCourse(event.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="studentIncome">Annual Family Income (₹)</label>
+              <input
+                id="studentIncome"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="Enter annual income"
+                value={studentIncome}
+                onChange={(event) => setStudentIncome(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <button type="submit">Find Matching Scholarships</button>
+        </form>
+      </section>
+
+      <section className="scholarship-filters">
+        <h2>Explore Opportunities</h2>
+
+        <div className="filter-controls">
+          <div>
+            <label htmlFor="levelFilter">Filter by education</label>
+            <select
+              id="levelFilter"
+              value={levelFilter}
+              onChange={(event) => setLevelFilter(event.target.value)}
+            >
+              <option value="All">All Levels</option>
+              <option value="School">School</option>
+              <option value="College">College</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="portalFilter">Filter by portal</label>
+            <select
+              id="portalFilter"
+              value={portalFilter}
+              onChange={(event) => setPortalFilter(event.target.value)}
+            >
+              <option value="All">All Portals</option>
+              <option value="National">National</option>
+              <option value="State">State</option>
+            </select>
+          </div>
+
+          <button type="button" onClick={clearFilters}>
+            Clear Filters
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowSavedOnly((previous) => !previous);
+              setShowMatches(false);
+              setMessage("");
+            }}
+          >
+            {showSavedOnly ? "Show All Scholarships" : "Saved Scholarships"} (
+            {savedScholarships.length})
+          </button>
+        </div>
+
+        {message && <p role="status">{message}</p>}
+
+        <p>
+          Showing {filteredScholarships.length} scholarship
+          {filteredScholarships.length === 1 ? "" : "s"}.
+        </p>
+
+        <div className="scholarship-grid">
+          {filteredScholarships.map((item) => {
+            const percentage = getMatchPercentage(item);
+            const reasons = getMatchReasons(item);
+
+            return (
+              <article className="scholarship-card" key={item.id}>
+                <div className="scholarship-card-header">
+                  <span className="scholarship-provider">{item.provider}</span>
+                  <span className="scholarship-level">{item.level}</span>
+                </div>
+
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+
+                <div className="match-percentage">
+                  <div className="match-percentage-heading">
+                    <span>Profile Match</span>
+                    <strong>
+                      {percentage === null
+                        ? "Add your profile"
+                        : `${percentage}%`}
+                    </strong>
+                  </div>
+
+                  <div
+                    className="match-progress-track"
+                    role="progressbar"
+                    aria-label="Profile match percentage"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={percentage ?? undefined}
+                  >
+                    <div
+                      className="match-progress-fill"
+                      style={{ width: `${percentage ?? 0}%` }}
+                    />
+                  </div>
+
+                  <small>
+                    This percentage reflects only criteria that could be
+                    assessed using the available scholarship data. Unknown
+                    criteria are excluded, so even a 100% match does not
+                    confirm eligibility. Verify all requirements on the
+                    official portal.
+                  </small>
+                </div>
+
+                <div className="match-reasons">
+                  <h4>Match Details</h4>
+                  <ul>
+                    {reasons.map((reason, index) => (
+                      <li
+                        key={`${item.id}-${index}`}
+                        className={`match-reason ${reason.type}`}
+                      >
+                        {reason.type === "match"
+                          ? "✓ "
+                          : reason.type === "warning"
+                            ? "⚠ "
+                            : "ℹ "}
+                        {reason.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="scholarship-card-actions">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedScholarship(item)}
+                  >
+                    View Details
+                  </button>
+
+                  <button type="button" onClick={() => toggleSaved(item)}>
+                    {isSaved(item) ? "Remove Saved" : "Save Scholarship"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {filteredScholarships.length === 0 && (
+          <div className="no-scholarships">
+            <h3>No scholarships found</h3>
+            <p>Try changing your search or filters.</p>
+            <button type="button" onClick={clearFilters}>
+              Clear Filters
+            </button>
+          </div>
+        )}
+      </section>
+
+      {selectedScholarship && (
+        <div
+          className="scholarship-modal-overlay"
+          onClick={() => setSelectedScholarship(null)}
+        >
+          <div
+            className="scholarship-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scholarship-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Close details"
+              onClick={() => setSelectedScholarship(null)}
+            >
+              ×
+            </button>
+
+            <h2 id="scholarship-modal-title">{selectedScholarship.name}</h2>
+            <p>
+              <strong>Provider:</strong> {selectedScholarship.provider}
+            </p>
+            <p>
+              <strong>Education Level:</strong> {selectedScholarship.level}
+            </p>
+            <p>
+              <strong>State:</strong> {selectedScholarship.state}
+            </p>
+            <p>
+              <strong>Category:</strong> {selectedScholarship.category}
+            </p>
+            <p>
+              <strong>Description:</strong> {selectedScholarship.description}
+            </p>
+            <p>
+              <strong>Eligibility:</strong> {selectedScholarship.eligibility}
+            </p>
+            <p>
+              <strong>Deadline:</strong> {selectedScholarship.deadline}
+            </p>
+            <p>
+              <strong>Profile Match:</strong>{" "}
+              {getMatchPercentage(selectedScholarship) === null
+                ? "Add your profile"
+                : `${getMatchPercentage(selectedScholarship)}%`}
+            </p>
+
+            <p>
+              This is an estimate based on available data, not an official
+              eligibility decision. Verify current eligibility rules,
+              deadlines and documents on the official portal.
+            </p>
+
+            <div className="scholarship-card-actions">
+              {selectedScholarship.link && (
+                <a
+                  className="details-button official-portal-link"
+                  href={selectedScholarship.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Visit Official Portal
+                </a>
+              )}
+
+              <button
+                type="button"
+                onClick={() => toggleSaved(selectedScholarship)}
+              >
+                {isSaved(selectedScholarship)
+                  ? "Remove Saved"
+                  : "Save Scholarship"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
-export default ScholarshipDetails;
+export default Scholarships;
