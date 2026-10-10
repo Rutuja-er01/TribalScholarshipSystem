@@ -1,0 +1,9 @@
+[
+  {
+    "studentId": "REPLACE_WITH_REAL_STUDENT_ID",
+    "scholarshipId": "REPLACE_WITH_REAL_SCHOLARSHIP_ID",
+    "submissionDate": null,
+    "status": "Applied",
+    "isDemo": true
+  }
+]

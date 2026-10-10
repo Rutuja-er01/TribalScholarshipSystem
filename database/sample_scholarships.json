@@ -1,0 +1,40 @@
+[
+  {
+    "name": "Post Matric Scholarship",
+    "category": "Post Matric",
+    "description": "Sample scholarship record for students studying after matriculation.",
+    "eligibilityCriteria": [
+      "Student belongs to the intended eligible category",
+      "Student meets the applicable educational requirements",
+      "Student meets the applicable family income requirements"
+    ],
+    "requiredDocuments": [
+      "Caste certificate, if applicable",
+      "Income certificate, if required",
+      "Previous examination marksheet",
+      "Admission proof",
+      "Bank account details"
+    ],
+    "applicationDeadline": null,
+    "isActive": true,
+    "isDemo": true
+  },
+  {
+    "name": "Pre Matric Scholarship",
+    "category": "Pre Matric",
+    "description": "Sample scholarship record for eligible students studying before matriculation.",
+    "eligibilityCriteria": [
+      "Student meets the scheme's applicable category requirements",
+      "Student meets the applicable school and income requirements"
+    ],
+    "requiredDocuments": [
+      "Student identity proof",
+      "School certificate",
+      "Income certificate, if required",
+      "Category certificate, if applicable"
+    ],
+    "applicationDeadline": null,
+    "isActive": true,
+    "isDemo": true
+  }
+]
