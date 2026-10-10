@@ -1,0 +1,278 @@
+
+.application-guide-page {
+  min-height: 100vh;
+  padding-bottom: 60px;
+  background: #f7faf5;
+  color: #2b3d2e;
+}
+
+.application-guide-hero {
+  padding: 60px 7%;
+  text-align: center;
+  background: linear-gradient(135deg, #eaf5e6, #ffffff);
+}
+
+.guide-tag {
+  display: inline-block;
+  padding: 8px 15px;
+  border-radius: 30px;
+  background: #dcefd7;
+  color: #347447;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.application-guide-hero h1 {
+  margin: 18px 0 12px;
+  color: #245b35;
+  font-size: clamp(29px, 4vw, 43px);
+}
+
+.application-guide-hero p {
+  max-width: 680px;
+  margin: 0 auto 25px;
+  color: #647467;
+  line-height: 1.8;
+}
+
+.guide-start-button {
+  display: inline-block;
+  padding: 13px 22px;
+  border-radius: 9px;
+  background: #347a45;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.guide-start-button:hover {
+  background: #245b35;
+}
+
+.guide-progress,
+.guide-steps-section,
+.guide-important-note {
+  width: min(900px, 90%);
+  margin: 30px auto;
+}
+
+.guide-progress {
+  padding: 25px;
+  border: 1px solid #e1e9dd;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 5px 20px #25452b08;
+}
+
+.guide-progress-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 16px;
+}
+
+.guide-progress-heading h2 {
+  margin: 0 0 7px;
+  color: #285f39;
+  font-size: 21px;
+}
+
+.guide-progress-heading p {
+  margin: 0;
+  color: #718071;
+  font-size: 14px;
+}
+
+.guide-progress-heading strong {
+  color: #287641;
+  font-size: 28px;
+}
+
+.guide-progress-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #e5eadf;
+}
+
+.guide-progress-fill {
+  height: 100%;
+  border-radius: 20px;
+  background: #39834b;
+  transition: width 0.25s ease;
+}
+
+.guide-steps-section > h2 {
+  margin-bottom: 8px;
+  color: #285f39;
+  font-size: 27px;
+}
+
+.guide-section-description {
+  margin-bottom: 25px;
+  color: #718071;
+  line-height: 1.7;
+}
+
+.guide-steps-list {
+  display: grid;
+  gap: 20px;
+}
+
+.guide-step-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 25px;
+  border: 1px solid #e1e9dd;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 5px 20px #25452b08;
+  transition: border-color 0.2s ease;
+}
+
+.guide-step-card:hover {
+  border-color: #a6c9a5;
+}
+
+.guide-step-completed {
+  border-color: #9ac8a0;
+  background: #fbfef9;
+}
+
+.guide-step-number {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #e4f1df;
+  color: #2d7040;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.guide-step-completed .guide-step-number {
+  background: #347a45;
+  color: #ffffff;
+}
+
+.guide-step-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.guide-step-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.guide-step-heading h3 {
+  margin: 5px 0 10px;
+  color: #2b5033;
+  font-size: 19px;
+}
+
+.guide-step-heading span {
+  flex-shrink: 0;
+  color: #68816a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.guide-step-content > p {
+  color: #657267;
+  line-height: 1.7;
+}
+
+.guide-step-content ul {
+  padding-left: 22px;
+  color: #526455;
+  line-height: 1.9;
+}
+
+.guide-complete-button {
+  margin-top: 8px;
+  padding: 10px 15px;
+  border: 1px solid #347a45;
+  border-radius: 8px;
+  background: #347a45;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guide-complete-button:hover {
+  background: #245b35;
+}
+
+.guide-complete-button.completed-button {
+  background: #ffffff;
+  color: #347a45;
+}
+
+.guide-complete-button.completed-button:hover {
+  background: #edf7e9;
+}
+
+.guide-important-note {
+  padding: 25px;
+  border-left: 5px solid #6b985c;
+  border-radius: 10px;
+  background: #edf5e9;
+}
+
+.guide-important-note h2 {
+  margin-top: 0;
+  color: #285f39;
+}
+
+.guide-important-note p {
+  margin-bottom: 0;
+  color: #526455;
+  line-height: 1.8;
+}
+
+@media (max-width: 600px) {
+  .application-guide-hero {
+    padding: 42px 5%;
+  }
+
+  .guide-progress,
+  .guide-steps-section,
+  .guide-important-note {
+    width: 92%;
+  }
+
+  .guide-progress {
+    padding: 19px;
+  }
+
+  .guide-step-card {
+    gap: 13px;
+    padding: 18px;
+  }
+
+  .guide-step-number {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+
+  .guide-step-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .guide-step-heading h3 {
+    font-size: 17px;
+  }
+}

@@ -1,0 +1,170 @@
+
+.details-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 35px 22px 60px;
+  color: #294332;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: #347347;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.details-hero {
+  padding: 40px 30px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #eaf5e5, #f8fbf5);
+  border: 1px solid #dcebd5;
+  text-align: center;
+}
+
+.details-icon {
+  display: block;
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.details-label {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 30px;
+  background: #dcefd5;
+  color: #285d38;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.details-hero h1 {
+  margin: 18px 0 12px;
+  color: #285d38;
+  font-size: clamp(26px, 4vw, 38px);
+}
+
+.details-hero p {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.8;
+  color: #526657;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 28px;
+}
+
+.details-card {
+  padding: 25px;
+  background: #ffffff;
+  border: 1px solid #e0e9dc;
+  border-radius: 16px;
+  box-shadow: 0 5px 18px rgba(43, 78, 48, 0.06);
+}
+
+.details-card h2 {
+  margin: 0 0 18px;
+  color: #285d38;
+  font-size: 21px;
+}
+
+.details-card p {
+  color: #657267;
+  line-height: 1.7;
+}
+
+.details-card ul {
+  padding-left: 22px;
+  margin-bottom: 0;
+}
+
+.details-card li {
+  padding-left: 4px;
+  margin-bottom: 13px;
+  line-height: 1.7;
+  color: #4b5e4e;
+}
+
+.documents-card {
+  grid-column: 1 / -1;
+}
+
+.apply-section {
+  margin-top: 28px;
+  padding: 32px 24px;
+  text-align: center;
+  background: #f3f8ef;
+  border-radius: 18px;
+}
+
+.apply-section h2 {
+  color: #285d38;
+  margin-top: 0;
+}
+
+.apply-section p {
+  max-width: 680px;
+  margin: 12px auto 22px;
+  line-height: 1.7;
+  color: #526657;
+}
+
+.apply-button,
+.back-button {
+  display: inline-block;
+  padding: 13px 23px;
+  border-radius: 9px;
+  background: #347347;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.apply-button:hover,
+.back-button:hover {
+  background: #285d38;
+}
+
+.details-disclaimer {
+  margin-top: 22px;
+  color: #737e73;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.not-found {
+  margin-top: 40px;
+  text-align: center;
+}
+
+@media (max-width: 650px) {
+  .details-page {
+    padding: 25px 15px 40px;
+  }
+
+  .details-hero {
+    padding: 30px 18px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .documents-card {
+    grid-column: auto;
+  }
+
+  .details-card {
+    padding: 20px;
+  }
+}

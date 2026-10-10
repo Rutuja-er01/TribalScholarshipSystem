@@ -1,0 +1,579 @@
+
+.dashboard-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+  color: #243b2b;
+}
+
+.dashboard-heading {
+  margin-bottom: 30px;
+}
+
+.dashboard-eyebrow {
+  color: #4d805b;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.dashboard-heading h1 {
+  margin: 8px 0 12px;
+  color: #244b32;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+
+.dashboard-heading > p:last-child {
+  max-width: 650px;
+  color: #637368;
+  line-height: 1.7;
+}
+
+.dashboard-message {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 14px 18px;
+  border: 1px solid #c9e4ce;
+  border-radius: 12px;
+  background: #eff8ef;
+  color: #285d38;
+}
+
+.dashboard-message button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #e0eadf;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(39, 77, 48, 0.05);
+}
+
+.summary-icon {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 14px;
+  background: #edf6e9;
+  font-size: 1.4rem;
+}
+
+.summary-card p {
+  margin: 0 0 7px;
+  color: #6b7b6d;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.summary-card h2 {
+  margin: 0;
+  color: #2f6940;
+  font-size: 1.8rem;
+}
+
+.dashboard-card {
+  margin-top: 24px;
+  padding: 28px;
+  border: 1px solid #e0eadf;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 6px 22px rgba(39, 77, 48, 0.05);
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.section-heading > span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 12px;
+  background: #edf6e9;
+  font-size: 1.35rem;
+}
+
+.section-heading h2 {
+  margin: 0 0 6px;
+  color: #285437;
+  font-size: 1.4rem;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #758176;
+  line-height: 1.5;
+}
+
+.profile-form,
+.tracker-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.profile-form label,
+.tracker-form label,
+.application-actions label,
+.deadline-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #344b39;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.profile-form input,
+.profile-form select,
+.tracker-form input,
+.tracker-form select,
+.status-select,
+.deadline-edit input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  border: 1px solid #d8e3d7;
+  border-radius: 9px;
+  background: #fcfefb;
+  color: #2c4030;
+  font: inherit;
+}
+
+.profile-form input:focus,
+.profile-form select:focus,
+.tracker-form input:focus,
+.tracker-form select:focus,
+.status-select:focus,
+.deadline-edit input:focus {
+  outline: 2px solid #a8d4a9;
+  outline-offset: 1px;
+  border-color: #4f8a59;
+}
+
+.primary-button {
+  align-self: end;
+  width: fit-content;
+  min-height: 44px;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 9px;
+  background: #39784a;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.primary-button:hover {
+  background: #285d38;
+  transform: translateY(-1px);
+}
+
+.tracker-form {
+  align-items: end;
+  padding-bottom: 26px;
+  border-bottom: 1px solid #e7eee5;
+}
+
+.deadline-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.deadline-summary span {
+  padding: 9px 13px;
+  border: 1px solid #dce9d9;
+  border-radius: 20px;
+  background: #f4f9f1;
+  color: #386443;
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.application-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.empty-tracker {
+  padding: 34px 20px;
+  border: 1px dashed #ccddc9;
+  border-radius: 14px;
+  background: #fbfdf9;
+  text-align: center;
+}
+
+.empty-tracker > span {
+  font-size: 2rem;
+}
+
+.empty-tracker h3 {
+  margin: 12px 0 8px;
+  color: #31583a;
+}
+
+.empty-tracker p {
+  max-width: 480px;
+  margin: 0 auto;
+  color: #718072;
+  line-height: 1.6;
+}
+
+.application-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 22px;
+  padding: 22px;
+  border: 1px solid #e0eadf;
+  border-radius: 14px;
+  background: #fcfefb;
+}
+
+.application-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.application-details h3 {
+  margin: 0 0 8px;
+  color: #2b5435;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.application-details > p {
+  margin: 0 0 12px;
+  color: #718072;
+  font-size: 0.9rem;
+}
+
+.deadline-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  color: #536756;
+  font-size: 0.9rem;
+}
+
+.deadline-badge {
+  display: inline-block;
+  width: fit-content;
+  margin: 0 0 16px;
+  padding: 7px 11px;
+  border-radius: 20px;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.deadline-badge.no-deadline {
+  background: #edf0ed;
+  color: #59655b;
+}
+
+.deadline-badge.upcoming {
+  background: #e7f5e8;
+  color: #28643a;
+}
+
+.deadline-badge.urgent {
+  background: #fff0d6;
+  color: #875300;
+}
+
+.deadline-badge.expired {
+  background: #fde8e6;
+  color: #a3312a;
+}
+
+.deadline-edit {
+  max-width: 250px;
+  margin-bottom: 14px;
+}
+
+.application-details a {
+  display: block;
+  width: fit-content;
+  color: #39784a;
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.application-details a:hover {
+  text-decoration: underline;
+}
+
+.application-actions {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.application-actions label {
+  min-width: 155px;
+}
+
+.remove-button {
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid #e7caca;
+  border-radius: 9px;
+  background: #fff8f7;
+  color: #a33c36;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.remove-button:hover {
+  background: #fce9e6;
+}
+
+.dashboard-note {
+  margin-top: 22px;
+  color: #788378;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .dashboard-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .application-item {
+    flex-direction: column;
+  }
+
+  .application-actions {
+    width: 100%;
+  }
+
+  .application-actions label {
+    flex: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-page {
+    padding: 32px 16px 44px;
+  }
+
+  .dashboard-summary,
+  .profile-form,
+  .tracker-form {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card {
+    padding: 20px;
+  }
+
+  .primary-button {
+    width: 100%;
+  }
+
+  .application-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .application-actions label {
+    min-width: 0;
+  }
+
+  .deadline-edit {
+    max-width: none;
+  }
+}
+
+/* Scholarship journey section */
+.journey-section {
+  margin-bottom: 24px;
+}
+
+.journey-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.journey-card {
+  padding: 22px;
+  border: 1px solid #dce8dc;
+  border-radius: 16px;
+  background: #f8fbf7;
+}
+
+.journey-icon {
+  display: inline-block;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.journey-card h3 {
+  margin: 0 0 10px;
+  color: #254c35;
+  font-size: 18px;
+}
+
+.journey-number {
+  margin: 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #286b45;
+}
+
+.journey-card p {
+  color: #5e6d61;
+  font-size: 14px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  margin: 12px 0;
+  border-radius: 20px;
+  background: #dfe9df;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 20px;
+  background: #378653;
+  transition: width 0.3s ease;
+}
+
+.journey-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #276b43;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.journey-link:hover {
+  text-decoration: underline;
+}
+
+.saved-scholarships-list {
+  margin-top: 24px;
+}
+
+.saved-scholarships-list h3 {
+  color: #254c35;
+}
+
+.saved-scholarship-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e4eae4;
+}
+
+.saved-scholarship-item a {
+  color: #276b43;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.journey-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.journey-quick-links a {
+  display: inline-block;
+  padding: 11px 16px;
+  border-radius: 9px;
+  background: #e8f3e9;
+  color: #245b38;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.journey-quick-links a:hover {
+  background: #d7ead9;
+}
+
+@media (max-width: 800px) {
+  .journey-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 550px) {
+  .journey-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-scholarship-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.dashboard-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  margin: 16px 0;
+  background-color: #fff3cd;
+  color: #664d03;
+  border: 1px solid #ffecb5;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.dashboard-message button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+
