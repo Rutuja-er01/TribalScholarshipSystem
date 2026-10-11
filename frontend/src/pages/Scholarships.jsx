@@ -58,7 +58,9 @@ function normalizeScholarship(item) {
       ? item.eligibleCourses
       : [],
     deadline: item.deadline || "Check the official portal",
-    link: item.link || "",
+
+    // Support both backend and local scholarship data.
+    link: item.official_url || item.link || "",
   };
 }
 
@@ -98,8 +100,6 @@ function Scholarships() {
 
   const [selectedScholarship, setSelectedScholarship] = useState(null);
   const [message, setMessage] = useState("");
-
-  // Tracks which scholarship is currently being applied for.
   const [applyingId, setApplyingId] = useState(null);
 
   const {
@@ -110,7 +110,7 @@ function Scholarships() {
     familyIncome,
   } = studentProfile;
 
-  // Load scholarships from the backend.
+  // Load scholarship listings from the backend.
   useEffect(() => {
     let cancelled = false;
 
@@ -143,7 +143,7 @@ function Scholarships() {
     };
   }, []);
 
-  // Save the scholarship matching profile locally.
+  // Save the student's profile locally.
   useEffect(() => {
     localStorage.setItem(
       "tribalStudentProfile",
@@ -151,7 +151,7 @@ function Scholarships() {
     );
   }, [studentProfile]);
 
-  // Save the student's saved scholarship list locally.
+  // Save bookmarked scholarships locally.
   useEffect(() => {
     localStorage.setItem(
       "savedScholarships",
@@ -168,7 +168,7 @@ function Scholarships() {
     }));
   };
 
-  // Submit an application to the FastAPI backend.
+  // Submit an application through the backend.
   const handleApply = async (item) => {
     const token = localStorage.getItem("token");
 
@@ -183,9 +183,7 @@ function Scholarships() {
 
       const data = await submitApplication(item.id, token);
 
-      setMessage(
-        `${data.message}: ${data.scholarship_name}`
-      );
+      setMessage(`${data.message}: ${data.scholarship_name}`);
     } catch (error) {
       setMessage(
         error.message || "Unable to submit your application."
@@ -195,7 +193,7 @@ function Scholarships() {
     }
   };
 
-  // Use backend records when available; otherwise use local data.
+  // Prefer backend records; use local records if the backend is unavailable.
   const displayScholarships =
     apiScholarships !== null
       ? apiScholarships
@@ -825,7 +823,7 @@ function Scholarships() {
           </div>
         </div>
       )}
-
+s
       <footer>
         <p>
           © 2026 TribalScholar. Supporting educational opportunities for
@@ -837,3 +835,6 @@ function Scholarships() {
 }
 
 export default Scholarships;
+
+
+

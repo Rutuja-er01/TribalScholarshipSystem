@@ -1,4 +1,3 @@
-
 import os
 import hmac
 from datetime import datetime, timedelta, timezone
@@ -84,6 +83,7 @@ scholarships = [
             "Financial assistance for eligible students "
             "studying after matriculation."
         ),
+        "official_url": "https://mahadbt.maharashtra.gov.in/",
     },
     {
         "id": 2,
@@ -92,8 +92,14 @@ scholarships = [
         "description": (
             "Financial assistance for eligible school students."
         ),
+        "official_url": "https://scholarships.gov.in/",
     },
 ]
+
+# These URLs lead to official government portals.
+# They are not guaranteed direct application pages for
+# every scheme. Verify the exact scheme and eligibility
+# before presenting a student with application guidance.
 
 # --------------------------------------------------
 # REQUEST MODELS
@@ -164,7 +170,6 @@ def get_current_student(
 
     payload = decode_access_token(credentials.credentials)
 
-    # Do not allow an administrator token to act as a student.
     if payload.get("role", "student") != "student":
         raise HTTPException(
             status_code=403,
@@ -172,6 +177,7 @@ def get_current_student(
         )
 
     email = payload.get("sub")
+
     if not email:
         raise HTTPException(
             status_code=401,
@@ -282,7 +288,10 @@ def get_scholarships():
 @app.get("/api/scholarships/{scholarship_id}")
 def get_scholarship(scholarship_id: int):
     scholarship = next(
-        (item for item in scholarships if item["id"] == scholarship_id),
+        (
+            item for item in scholarships
+            if item["id"] == scholarship_id
+        ),
         None,
     )
 
@@ -396,6 +405,7 @@ def update_my_profile(
 
         if name is not None:
             name = name.strip()
+
             if not name:
                 raise HTTPException(
                     status_code=400,

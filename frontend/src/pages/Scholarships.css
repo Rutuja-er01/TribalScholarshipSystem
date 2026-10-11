@@ -796,3 +796,48 @@
   }
 }
 
+/* FORCE SCHOLARSHIP SEARCH BAR TO STAY WHITE */
+
+.scholarships-page .scholarships-hero input,
+.scholarships-page .scholarships-hero input[type="text"],
+.scholarships-page .scholarships-hero input[type="search"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #263b2b !important;
+  -webkit-text-fill-color: #263b2b !important;
+  border: 1px solid #d6e5d1 !important;
+  box-shadow: 0 8px 24px rgba(37, 69, 43, 0.08) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  color-scheme: light !important;
+}
+
+.scholarships-page .scholarships-hero input::placeholder {
+  color: #718071 !important;
+  -webkit-text-fill-color: #718071 !important;
+  opacity: 1 !important;
+}
+
+.scholarships-page .scholarships-hero input:focus {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #263b2b !important;
+  outline: none !important;
+  border-color: #39804b !important;
+}
+/* Explore Scholarships search input */
+.scholarships-page .scholarship-filters .filter-controls input[type="text"] {
+  background-color: white !important;
+  color: #263b2b !important;
+  -webkit-text-fill-color: #263b2b !important;
+  border: 1px solid #d6e5d1 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  color-scheme: light !important;
+}
+
+.scholarships-page .scholarship-filters .filter-controls input[type="text"]::placeholder {
+  color: #718071 !important;
+  -webkit-text-fill-color: #718071 !important;
+  opacity: 1 !important;
+}
